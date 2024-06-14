@@ -11,8 +11,10 @@
     <input type=text size=32 id=kid autocomplete="on" value="">
 <p>key<br>
     <input type=text size=32 id=key autocomplete="on" value="">
-<p>height</p>
+<p>min height</p>
 <input type=text size=4 id=height autocomplete="on" value="720">
+<p>min bw</p>
+<input type=text size=4 id=minBW autocomplete="on" value="0">
 
 <p><input type=button value=CLICK_ME_TO_PLAY_AND_WAIT_FOR_FEW_SECONDS onclick='load()'>
 </p>
@@ -27,6 +29,9 @@
         key.value = urlParams.get("key");
         if (urlParams.get("height") != null) {
             height.value = urlParams.get("height");
+        }
+        if (urlParams.get("minBW") != null) {
+            minBW.value = urlParams.get("minBW");
         }
 
         function initApp() {
@@ -57,7 +62,7 @@
 
         async function load() {
             try {
-                player.configure(JSON.parse('{\"drm\": {\"clearKeys\": {\"' + kid.value + '\": \"' + key.value + '"}},\"streaming\": {\"lowLatencyMode\": true},\"restrictions\": {\"minHeight\":' + height.value + ' }}'));
+                player.configure(JSON.parse('{\"drm\": {\"clearKeys\": {\"' + kid.value + '\": \"' + key.value + '"}},\"streaming\": {\"lowLatencyMode\": true},\"restrictions\": {\"minHeight\":' + height.value + ', \"minBandwidth\":' + minBW.value + '}}'));
                 await player.load(mediaurl.value);
                 console.log('The video has now been loaded!');
                 setInterval(function () {
