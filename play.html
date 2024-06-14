@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/shaka-player@4.9.4/dist/shaka-player.compiled.min.js"></script>
+</head>
+<body bgcolor=black text="#ffffff" style="font-family:sans-serif">
+<p>Media URL<br>
+    <input type=text size=80 id=mediaurl autocomplete="on" value="">
+<p>kid<br>
+    <input type=text size=32 id=kid autocomplete="on" value="">
+<p>key<br>
+    <input type=text size=32 id=key autocomplete="on" value="">
+
+<p><input type=button value=CLICK_ME_TO_PLAY onclick='load()'>
+</p>
+<video id="video" width="768" autoplay controls></video>
+<p>Stats<br>
+    <textarea id=stats rows=70 cols=120></textarea>
+    <script>
+        const player = new shaka.Player();
+        const urlParams = new URLSearchParams(window.location.hash.substr(1))
+        mediaurl.value = urlParams.get("url");
+        kid.value = urlParams.get("kid");
+        key.value = urlParams.get("key");
+
+        function initApp() {
+            shaka.polyfill.installAll();
+            if (shaka.Player.isBrowserSupported()) {
+                initPlayer();
+            } else {
+                console.error('Browser not supported!');
+            }
+        }
+
+        async function initPlayer() {
+            const video = document.getElementById('video');
+            await player.attach(video);
+            window.player = player;
+            player.addEventListener('error', onErrorEvent);
+        }
+
+        function onErrorEvent(event) {
+            onError(event.detail);
+        }
+
+        function onError(error) {
+            console.error('Error code', error.code, 'object', error);
+        }
+
+        document.addEventListener('DOMContentLoaded', initApp);
+
+        function load() {
+            try {
+                console.log(JSON.parse('{\"drm\": {\"clearKeys\": {\"' + kid.value + '\": \"' + key.value + '"}}}'));
+                player.configure(JSON.parse('{\"drm\": {\"clearKeys\": {\"' + kid.value + '\": \"' + key.value + '"}}}'));
+                player.load(mediaurl.value);
+                console.log('The video has now been loaded!');
+                setInterval(function () {
+                    stats.value = "FrameRate - " + player.getVariantTracks().filter(track => track.active == true)[0].frameRate + "\n" + JSON.stringify(player.getStats(), null, 4);
+                }, 3000);
+                player.play();
+            } catch (e) {
+                onError(e);
+            }
+        }
+    </script>
+</body>
+</html>
