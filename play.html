@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta name="referrer" content="no-referrer" />
     <script src="https://cdn.jsdelivr.net/npm/shaka-player@4.9.4/dist/shaka-player.compiled.min.js"></script>
 </head>
 <body bgcolor=black text="#ffffff" style="font-family:sans-serif">
@@ -52,14 +51,12 @@
 
         function load() {
             try {
-                console.log(JSON.parse('{\"drm\": {\"clearKeys\": {\"' + kid.value + '\": \"' + key.value + '"}}}'));
-                player.configure(JSON.parse('{\"drm\": {\"clearKeys\": {\"' + kid.value + '\": \"' + key.value + '"}}}'));
+                player.configure(JSON.parse('{\"drm\": {\"clearKeys\": {\"' + kid.value + '\": \"' + key.value + '"}},\"streaming\": {\"lowLatencyMode\": true},\"restrictions\": {\"minHeight\": 720}}'));
                 player.load(mediaurl.value);
                 console.log('The video has now been loaded!');
                 setInterval(function () {
                     stats.value = "FrameRate - " + player.getVariantTracks().filter(track => track.active == true)[0].frameRate + "\n" + JSON.stringify(player.getStats(), null, 4);
                 }, 3000);
-                player.play();
             } catch (e) {
                 onError(e);
             }
