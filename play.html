@@ -23,7 +23,6 @@
         mediaurl.value = urlParams.get("url");
         kid.value = urlParams.get("kid");
         key.value = urlParams.get("key");
-
         function initApp() {
             shaka.polyfill.installAll();
             if (shaka.Player.isBrowserSupported()) {
@@ -32,24 +31,19 @@
                 console.error('Browser not supported!');
             }
         }
-
         async function initPlayer() {
             const video = document.getElementById('video');
             await player.attach(video);
             window.player = player;
             player.addEventListener('error', onErrorEvent);
         }
-
         function onErrorEvent(event) {
             onError(event.detail);
         }
-
         function onError(error) {
             console.error('Error code', error.code, 'object', error);
         }
-
         document.addEventListener('DOMContentLoaded', initApp);
-
         function load() {
             try {
                 player.configure(JSON.parse('{\"drm\": {\"clearKeys\": {\"' + kid.value + '\": \"' + key.value + '"}},\"streaming\": {\"lowLatencyMode\": true},\"restrictions\": {\"minHeight\": 720}}'));
