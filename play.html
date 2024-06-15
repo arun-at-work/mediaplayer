@@ -18,60 +18,63 @@
 
 <p><input type=button value=CLICK_ME_TO_PLAY_AND_WAIT_FOR_FEW_SECONDS onclick='load()'>
 </p>
-<video id="video" width="768" autoplay controls></video>
-<p>Stats<br>
-    <textarea id=stats rows=70 cols=120></textarea>
-    <script>
-        const player = new shaka.Player();
-        const urlParams = new URLSearchParams(window.location.hash.substr(1))
-        mediaurl.value = urlParams.get("url");
-        kid.value = urlParams.get("kid");
-        key.value = urlParams.get("key");
-        if (urlParams.get("height") != null) {
-            height.value = urlParams.get("height");
-        }
-        if (urlParams.get("minBW") != null) {
-            minBW.value = urlParams.get("minBW");
-        }
+<div id=vid_and_stats hidden=true>
+    <video id="video" width="768" autoplay controls></video>
+    <p>Stats<br>
+        <textarea id=stats rows=70 cols=120></textarea>
+</div>
+<script>
+    const player = new shaka.Player();
+    const urlParams = new URLSearchParams(window.location.hash.substr(1))
+    mediaurl.value = urlParams.get("url");
+    kid.value = urlParams.get("kid");
+    key.value = urlParams.get("key");
+    if (urlParams.get("height") != null) {
+        height.value = urlParams.get("height");
+    }
+    if (urlParams.get("minBW") != null) {
+        minBW.value = urlParams.get("minBW");
+    }
 
-        function initApp() {
-            shaka.polyfill.installAll();
-            if (shaka.Player.isBrowserSupported()) {
-                initPlayer();
-            } else {
-                console.error('Browser not supported!');
-            }
+    function initApp() {
+        shaka.polyfill.installAll();
+        if (shaka.Player.isBrowserSupported()) {
+            initPlayer();
+        } else {
+            console.error('Browser not supported!');
         }
+    }
 
-        async function initPlayer() {
-            const video = document.getElementById('video');
-            await player.attach(video);
-            window.player = player;
-            player.addEventListener('error', onErrorEvent);
+    async function initPlayer() {
+        const video = document.getElementById('video');
+        await player.attach(video);
+        window.player = player;
+        player.addEventListener('error', onErrorEvent);
+    }
+
+    function onErrorEvent(event) {
+        onError(event.detail);
+    }
+
+    function onError(error) {
+        console.error('Error code', error.code, 'object', error);
+    }
+
+    document.addEventListener('DOMContentLoaded', initApp);
+
+    async function load() {
+        try {
+            player.configure(JSON.parse('{\"drm\": {\"clearKeys\": {\"' + kid.value + '\": \"' + key.value + '"}},\"streaming\": {\"lowLatencyMode\": true},\"restrictions\": {\"minHeight\":' + height.value + ', \"minBandwidth\":' + minBW.value + '}}'));
+            await player.load(mediaurl.value);
+            console.log('The video has now been loaded!');
+            vid_and_stats.hidden = false
+            setInterval(function () {
+                stats.value = "FrameRate - " + player.getVariantTracks().filter(track => track.active == true)[0].frameRate + "\n" + JSON.stringify(player.getStats(), null, 4);
+            }, 3000);
+        } catch (e) {
+            onError(e);
         }
-
-        function onErrorEvent(event) {
-            onError(event.detail);
-        }
-
-        function onError(error) {
-            console.error('Error code', error.code, 'object', error);
-        }
-
-        document.addEventListener('DOMContentLoaded', initApp);
-
-        async function load() {
-            try {
-                player.configure(JSON.parse('{\"drm\": {\"clearKeys\": {\"' + kid.value + '\": \"' + key.value + '"}},\"streaming\": {\"lowLatencyMode\": true},\"restrictions\": {\"minHeight\":' + height.value + ', \"minBandwidth\":' + minBW.value + '}}'));
-                await player.load(mediaurl.value);
-                console.log('The video has now been loaded!');
-                setInterval(function () {
-                    stats.value = "FrameRate - " + player.getVariantTracks().filter(track => track.active == true)[0].frameRate + "\n" + JSON.stringify(player.getStats(), null, 4);
-                }, 3000);
-            } catch (e) {
-                onError(e);
-            }
-        }
-    </script>
+    }
+</script>
 </body>
 </html>
