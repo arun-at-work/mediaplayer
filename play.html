@@ -74,6 +74,7 @@
 
     async function load() {
         try {
+            vid_and_stats.hidden = true
             let config = JSON.parse('{\"streaming\": {\"lowLatencyMode\": true},\"restrictions\": {\"minHeight\":' + height.value + ', \"minBandwidth\":' + minBW.value + '}}');
             config.drm = {};
             config.drm.clearKeys = {};
