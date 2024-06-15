@@ -19,6 +19,7 @@
         <td><input type=text size=32 id=key autocomplete="on" value=""></td>
         <td><input type=text size=4 id=height autocomplete="on" value="720"></td>
         <td><input type=text size=4 id=minBW autocomplete="on" value="0"></td>
+    </tr>
 </table>
 
 <p><input type=button value=CLICK_ME_TO_PLAY_AND_WAIT_FOR_FEW_SECONDS onclick='load()'>
@@ -69,7 +70,16 @@
 
     async function load() {
         try {
-            player.configure(JSON.parse('{\"drm\": {\"clearKeys\": {\"' + kid.value + '\": \"' + key.value + '"}},\"streaming\": {\"lowLatencyMode\": true},\"restrictions\": {\"minHeight\":' + height.value + ', \"minBandwidth\":' + minBW.value + '}}'));
+            let config = JSON.parse('{\"streaming\": {\"lowLatencyMode\": true},\"restrictions\": {\"minHeight\":' + height.value + ', \"minBandwidth\":' + minBW.value + '}}');
+            config.drm = {};
+            config.drm.clearKeys = {};
+            for (const [k, v] of urlParams) {
+                if (k.startsWith('kid')) {
+                    Object.assign(config.drm.clearKeys, {[v]: urlParams.get(k.replace("kid", "key"))});
+                }
+            }
+            console.log(config);
+            player.configure(config);
             await player.load(mediaurl.value);
             console.log('The video has now been loaded!');
             vid_and_stats.hidden = false
