@@ -7,14 +7,19 @@
 <body bgcolor=black text="#ffffff" style="font-family:sans-serif">
 <p>Media URL<br>
     <input type=text size=80 id=mediaurl autocomplete="on" value="">
-<p>kid<br>
-    <input type=text size=32 id=kid autocomplete="on" value="">
-<p>key<br>
-    <input type=text size=32 id=key autocomplete="on" value="">
-<p>min height</p>
-<input type=text size=4 id=height autocomplete="on" value="720">
-<p>min bw</p>
-<input type=text size=4 id=minBW autocomplete="on" value="0">
+<table>
+    <tr>
+        <td>kid</td>
+        <td>key</td>
+        <td>MinHeight</td>
+        <td>MinBitrate</td>
+    </tr>
+    <tr>
+        <td><input type=text size=32 id=kid autocomplete="on" value=""></td>
+        <td><input type=text size=32 id=key autocomplete="on" value=""></td>
+        <td><input type=text size=4 id=height autocomplete="on" value="720"></td>
+        <td><input type=text size=4 id=minBW autocomplete="on" value="0"></td>
+</table>
 
 <p><input type=button value=CLICK_ME_TO_PLAY_AND_WAIT_FOR_FEW_SECONDS onclick='load()'>
 </p>
