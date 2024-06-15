@@ -2,32 +2,36 @@
 <html>
 <head>
     <meta name="referrer" content="no-referrer"/>
+    <meta name='viewport' content='width=device-width,initial-scale=1'>
     <script src="https://cdn.jsdelivr.net/npm/shaka-player@4.9.4/dist/shaka-player.compiled.min.js"></script>
 </head>
 <body bgcolor=black text="#ffffff" style="font-family:sans-serif">
 <p>Media URL<br>
-    <input type=text size=80 id=mediaurl autocomplete="on" value="">
+    <input type=text size=64 id=mediaurl autocomplete="on" value="">
 <table>
     <tr>
         <td>kid</td>
         <td>key</td>
-        <td>MinHeight</td>
-        <td>MinBitrate</td>
     </tr>
     <tr>
         <td><input type=text size=32 id=kid autocomplete="on" value=""></td>
         <td><input type=text size=32 id=key autocomplete="on" value=""></td>
-        <td><input type=text size=4 id=height autocomplete="on" value="720"></td>
-        <td><input type=text size=4 id=minBW autocomplete="on" value="0"></td>
+    </tr>
+    <tr>
+        <td>MinHeight</td>
+        <td>MinBitrate</td>
+    </tr>
+    <td><input type=text size=4 id=height autocomplete="on" value="720"></td>
+    <td><input type=text size=4 id=minBW autocomplete="on" value="0"></td>
     </tr>
 </table>
 
-<p><input type=button value=Play onclick='load()'>
+<p><input type=button value=PLAY onclick='load()'>
 </p>
 <div id=vid_and_stats hidden=true>
-    <video id="video" width="768" autoplay controls></video>
+    <video id="video" style="max-width: 80%; min-width: 80%; margin: 10%" autoplay controls></video>
     <p>Stats<br>
-        <textarea id=stats rows=70 cols=120></textarea>
+        <textarea id=stats rows=70 style="max-width: 80%; min-width: 80%; margin: 10%"></textarea>
 </div>
 <script>
     const player = new shaka.Player();
