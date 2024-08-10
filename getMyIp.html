@@ -16,9 +16,7 @@ function getIPs(){
         }
     };
     pc.createDataChannel("ignoreMe");
-    pc.createOffer(function(result){
-        pc.setLocalDescription(result, function(){}, function(){});
-    }, function(){});
+    pc.createOffer().then(offer => pc.setLocalDescription(offer))
 
 }
 </script>
