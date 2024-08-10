@@ -1,11 +1,8 @@
 <script>
 function getIPs(){
     let startTime = Date.now();
-    var RTCPeerConnection = window.RTCPeerConnection
-        || window.mozRTCPeerConnection
-        || window.webkitRTCPeerConnection;
-    var useWebKit = !!window.webkitRTCPeerConnection;
-    var servers = {iceServers: [{urls: "stun:139.84.169.215:34789"}]};
+    var RTCPeerConnection = window.RTCPeerConnection;
+    var servers = {iceServers: [{urls: "stun:74.125.250.129:19302"}]};
     var pc = new RTCPeerConnection(servers, {});
     pc.onicecandidate = function(ice){
         if(ice.candidate){
