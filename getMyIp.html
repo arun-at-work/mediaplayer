@@ -9,7 +9,7 @@ function getIPs(){
             console.log(ice.candidate.candidate)
             mayBeIp = ice.candidate.candidate.split(" ")[4];
             if(ice.candidate.candidate.indexOf("typ srflx raddr 0.0.0.0")>-1 && mayBeIp.indexOf(":")==-1){
-                result = "Your IP is " + mayBeIp + " it took "+(Date.now()-startTime) + " ms";
+                result = "Your IPv4 is " + mayBeIp + " it took "+(Date.now()-startTime) + " ms";
                 pc.close();
                 alert(result);
             }
