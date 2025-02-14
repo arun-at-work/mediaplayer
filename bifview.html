@@ -17,7 +17,9 @@
 <body>
 
   <h1>View BIF Thumbnail Files</h1>
-  <input type="file" id="bifFileInput" accept=".bif" />
+  <input type="file" id="bifFileInput" accept=".bif" /><br><br>
+  <div id="count"></div><br>
+  <div id="timestampMultiplier"></div><br>
   <div id="framesContainer"></div>
 
   <script>
@@ -41,6 +43,8 @@
       const view = new DataView(arrayBuffer);
       const framesContainer = document.getElementById('framesContainer');
       framesContainer.innerHTML = ''; // Clear previous frames
+      document.getElementById('count').innerHTML = '';
+      document.getElementById('timestampMultiplier').innerHTML = '';
 
       let offset = 0;
 
@@ -58,6 +62,13 @@
 
       // **Extract the number of frames** (unsigned 32-bit value at bytes 12, 13, 14, 15)
       const numFrames = view.getUint32(12, true); // Number of frames is at bytes 12-15
+      document.getElementById('count').innerHTML = "Image count - " + numFrames;
+      const timestampMultiplier = view.getUint32(16, true);
+      if (timestampMultiplier == 0){
+        timestampMultiplier = 1000;
+      }
+      document.getElementById('timestampMultiplier').innerHTML = "timestampMultiplier- " + timestampMultiplier;
+      
       offset += 4;
 
       // Read the width and height of each frame (4 bytes each, after the number of frames)
@@ -66,11 +77,14 @@
       offset += 8;
 
       // **Start reading frame offsets** from byte 68 (not after the frame dimensions)
+      const frameTimeStamps = [];
       const frameOffsets = [];
-      offset = 68; // This is where the first frame's offset starts
+      offset = 64; // This is where the first frame's timestamp starts
       for (let i = 0; i < numFrames; i++) {
+        frameTimeStamps.push(view.getUint32(offset, true));
+        offset += 4
         frameOffsets.push(view.getUint32(offset, true));
-        offset += 8;
+        offset += 4;
       }
       frameOffsets.push(arrayBuffer.byteLength)
 
@@ -79,7 +93,7 @@
         const frameOffset = frameOffsets[i];
         const frameData = getFrameData(arrayBuffer, frameOffset, frameOffsets[i+1]);
         const base64Image = arrayBufferToBase64(frameData);
-        displayFrame(base64Image);
+        displayFrame(base64Image,(frameTimeStamps[i]*timestampMultiplier)/1000);
       }
     }
 
@@ -94,11 +108,17 @@
       return window.btoa(binary);
     }
 
-    function displayFrame(base64Image) {
+    function displayFrame(base64Image,timestamp) {
+      const div = document.createElement('div');
       const imgElement = document.createElement('img');
       imgElement.src = `data:image/jpeg;base64,${base64Image}`; // Assuming JPEG format for simplicity
       imgElement.classList.add('frame');
-      document.getElementById('framesContainer').appendChild(imgElement);
+      let p = document.createElement('p');
+      p.textContent = timestamp+"th Second"; 
+      div.appendChild(imgElement);
+      div.appendChild(p);
+      div.style.textAlign = 'center';
+      document.getElementById('framesContainer').appendChild(div);
     }
   </script>
 
