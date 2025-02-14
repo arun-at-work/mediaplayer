@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>View BIF Thumbnail Files</title>
+  <style>
+    #framesContainer {
+      display: flex;
+      flex-wrap: wrap;
+    }
+    .frame {
+      margin: 5px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>View BIF Thumbnail Files</h1>
+  <input type="file" id="bifFileInput" accept=".bif" />
+  <div id="framesContainer"></div>
+
+  <script>
+    document.getElementById('bifFileInput').addEventListener('change', handleFileUpload);
+
+    function handleFileUpload(event) {
+      const file = event.target.files[0];
+      if (file && file.name.endsWith('.bif')) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const arrayBuffer = e.target.result;
+          processBifFile(arrayBuffer);
+        };
+        reader.readAsArrayBuffer(file);
+      } else {
+        alert('Please upload a valid .bif file.');
+      }
+    }
+
+    function processBifFile(arrayBuffer) {
+      const view = new DataView(arrayBuffer);
+      const framesContainer = document.getElementById('framesContainer');
+      framesContainer.innerHTML = ''; // Clear previous frames
+
+      let offset = 0;
+
+      // Correct magic number for BIF file format (0x89 0x42 0x49 0x46 0x0D 0x0A 0x1A 0x0A)
+      const magicNumber = [
+        0x89, 0x42, 0x49, 0x46, 0x0D, 0x0A, 0x1A, 0x0A
+      ];
+      for (let i = 0; i < magicNumber.length; i++) {
+        if (view.getUint8(offset + i) !== magicNumber[i]) {
+          alert('Invalid BIF file: incorrect magic number');
+          return;
+        }
+      }
+      offset += magicNumber.length;  // Skip magic number
+
+      // **Extract the number of frames** (unsigned 32-bit value at bytes 12, 13, 14, 15)
+      const numFrames = view.getUint32(12, true); // Number of frames is at bytes 12-15
+      offset += 4;
+
+      // Read the width and height of each frame (4 bytes each, after the number of frames)
+      const frameWidth = view.getUint32(offset, true);
+      const frameHeight = view.getUint32(offset + 4, true);
+      offset += 8;
+
+      // **Start reading frame offsets** from byte 68 (not after the frame dimensions)
+      const frameOffsets = [];
+      offset = 68; // This is where the first frame's offset starts
+      for (let i = 0; i < numFrames; i++) {
+        frameOffsets.push(view.getUint32(offset, true));
+        offset += 8;
+      }
+      frameOffsets.push(arrayBuffer.byteLength)
+
+      // Process each frame
+      for (let i = 0; i < numFrames; i++) {
+        const frameOffset = frameOffsets[i];
+        const frameData = getFrameData(arrayBuffer, frameOffset, frameOffsets[i+1]);
+        const base64Image = arrayBufferToBase64(frameData);
+        displayFrame(base64Image);
+      }
+    }
+
+    function getFrameData(arrayBuffer, frameOffset, nextFrameOffset) {
+      const view = new DataView(arrayBuffer);
+      const frameStart = frameOffset;
+      return arrayBuffer.slice(frameStart, nextFrameOffset);
+    }
+
+    function arrayBufferToBase64(buffer) {
+      const binary = String.fromCharCode.apply(null, new Uint8Array(buffer));
+      return window.btoa(binary);
+    }
+
+    function displayFrame(base64Image) {
+      const imgElement = document.createElement('img');
+      imgElement.src = `data:image/jpeg;base64,${base64Image}`; // Assuming JPEG format for simplicity
+      imgElement.classList.add('frame');
+      document.getElementById('framesContainer').appendChild(imgElement);
+    }
+  </script>
+
+</body>
+</html>
