@@ -96,7 +96,15 @@
                 }
             });
 
-            displayResults(results); // Display the results after all URLs are checked
+            // Sort results by response time in ascending order (fastest first)
+            results.sort((a, b) => {
+                // Check for error or timeout statuses and handle them
+                if (a.status === 'Timeout' || a.status === 'Error') return 1;
+                if (b.status === 'Timeout' || b.status === 'Error') return -1;
+                return a.duration - b.duration;  // Compare durations for valid responses
+            });
+
+            displayResults(results); // Display the sorted results
         }
 
         // Display the results
