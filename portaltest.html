@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fastest Portal Tester</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        #result {
+            margin-top: 20px;
+        }
+        .url-info {
+            margin-bottom: 10px;
+        }
+        .fastest {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Fastest Portal Tester</h1>
+    <div id="result"></div>
+
+    <script>
+        // Read URLs from the hash in the address bar
+        function getUrlsFromHash() {
+            const hash = window.location.hash.substring(1); // Remove the '#' symbol
+            return hash ? hash.split(',').map(url => url.trim()) : []; // Split by comma and clean up
+        }
+
+        // Function to add a timestamp to the URL to disable cache
+        function addCacheBusting(url) {
+            const timestamp = new Date().getTime(); // Get current timestamp
+            // Append timestamp as query parameter to prevent caching
+            return `${url}?timestamp=${timestamp}`;
+        }
+
+        // Function to extract the domain from a URL
+        function extractDomain(url) {
+            try {
+                const parsedUrl = new URL(url);
+                return parsedUrl.hostname; // Returns the domain name (e.g. 'example.com')
+            } catch (e) {
+                return url; // If parsing fails, just return the URL (could be an invalid URL)
+            }
+        }
+
+        // Function to check the URLs with a timeout
+        function checkUrlWithTimeout(url) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();  // Create an image element
+                img.src = addCacheBusting(url);  // Initiates the GET request for the URL
+
+                const start = Date.now();
+
+                // Timeout after 2 seconds (2000ms)
+                const timeout = setTimeout(() => {
+                    reject({ url, status: 'Timeout' }); // Reject with a timeout error if it takes too long
+                }, 2000);
+
+                // Track the load event to get the time taken
+                img.onload = () => {
+                    clearTimeout(timeout); // Clear the timeout if the request completes
+                    const duration = Date.now() - start;
+                    resolve({ url, duration, status: 'OK' });
+                };
+
+                // Handle errors for failed requests (CORS errors, DNS issues, network issues)
+                img.onerror = () => {
+                    clearTimeout(timeout); // Clear the timeout if the request fails
+                    const duration = Date.now() - start;
+                    reject({ url, status: 'Error' });
+                };
+            });
+        }
+
+        // Function to check all URLs
+        async function checkUrls(urls) {
+            const results = [];
+
+            // Loop through the URLs and check them
+            const promises = urls.map(url => checkUrlWithTimeout(url));
+
+            // Wait for all URLs to finish
+            const allResults = await Promise.allSettled(promises);
+
+            // Process the results
+            allResults.forEach(result => {
+                if (result.status === 'fulfilled') {
+                    results.push(result.value); // Successful result
+                } else {
+                    results.push(result.reason); // Timeout or error
+                }
+            });
+
+            displayResults(results); // Display the results after all URLs are checked
+        }
+
+        // Display the results
+        function displayResults(results) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '';  // Clear previous results
+
+            let fastest = null; // Start with null, only valid responses will be considered for the fastest
+
+            results.forEach(result => {
+                const domain = extractDomain(result.url); // Extract the domain from the URL
+                const div = document.createElement('div');
+                div.classList.add('url-info');
+                div.innerHTML = `<strong>${domain}</strong> responded in <strong>${result.duration || 'N/A'}ms</strong> (Status: ${result.status})`;
+
+                // Only consider valid (non-error) results for the fastest calculation
+                if (result.status === 'OK') {
+                    if (!fastest || result.duration < fastest.duration) {
+                        fastest = result;
+                        div.classList.add('fastest');
+                    }
+                }
+
+                resultDiv.appendChild(div);
+            });
+
+            // Only show the fastest response if there's a valid one
+            if (fastest) {
+                const fastestDiv = document.createElement('div');
+                const fastestDomain = extractDomain(fastest.url); // Extract domain for fastest
+                fastestDiv.innerHTML = `<h1>Fastest Response:</h1><strong>${fastestDomain}</strong> with <strong>${fastest.duration}ms</strong>`;
+                resultDiv.appendChild(fastestDiv);
+            } else {
+                const fastestDiv = document.createElement('div');
+                fastestDiv.innerHTML = `<h1>No valid responses received</h1>`;
+                resultDiv.appendChild(fastestDiv);
+            }
+        }
+
+        // Function to initialize the process (runs once when the page loads)
+        function init() {
+            const urls = getUrlsFromHash();
+            if (urls.length > 0) {
+                checkUrls(urls);
+            } else {
+                alert('No URLs found in the hash!');
+            }
+        }
+
+        // Initialize the check when the page loads
+        window.onload = init;
+
+    </script>
+</body>
+</html>
